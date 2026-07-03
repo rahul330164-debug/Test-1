@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <style>
+   /* Palette ko sticky banane ke liye */
+    .sticky-palette {
+        position: -webkit-sticky; /* Safari ke liye */
+        position: sticky;
+        top: 0; /* Page ke top se chipka rahega */
+        z-index: 1000; /* Taaki scroll karte waqt upar rahe */
+        background: white; /* Scroll ke peeche content na dikhe */
+        padding: 10px 0;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Halka shadow effect */
+    }
+  </style>
+  <style>
+   .scrollbar-hide::-webkit-scrollbar { display: none; }
+    #nav-palette { scroll-behavior: smooth; }
+    /* Palette button ki size yahan adjust karein */
+    .pal-btn { 
+        min-width: 2.5rem; 
+        height: 2.5rem; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        border-radius: 0.75rem; 
+        font-weight: 700; 
+        border: 1px solid #e2e8f0; 
+        flex-shrink: 0; 
+        transition: all 0.2s; 
+    }
+    #admin-login-modal {
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+}
+/* Jab modal hidden na ho, tab ye classes apply hoti hain */
+  </style>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Professional Test Portal
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+   document.addEventListener('click',function(e){
+if(e.target.id==='sol-prev' && window.currentSolutionIndex>0){
+currentSolutionIndex--; document.getElementById('qnav-'+currentSolutionIndex)?.scrollIntoView({behavior:'smooth'});
+}
+if(e.target.id==='sol-next' && window.currentSolutionIndex<sessionData.length-1){
+currentSolutionIndex++; document.getElementById('qnav-'+currentSolutionIndex)?.scrollIntoView({behavior:'smooth'});
+}
+});
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+   document.addEventListener('click',function(e){
+if(e.target.id==='sol-prev' && window.currentSolutionIndex>0){
+currentSolutionIndex--; document.getElementById('qnav-'+currentSolutionIndex)?.scrollIntoView({behavior:'smooth'});
+}
+if(e.target.id==='sol-next' && window.currentSolutionIndex<sessionData.length-1){
+currentSolutionIndex++; document.getElementById('qnav-'+currentSolutionIndex)?.scrollIntoView({behavior:'smooth'});
+}
+});
+  </script>
+ </head>
+ <body class="bg-slate-50 text-slate-800 font-sans">
+  <div class="max-w-xl mx-auto p-4" id="app">
+   <!-- Naya Header Design -->
+   <div class="mb-8 p-6 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl text-white shadow-xl flex justify-between items-center">
+    <div>
+     <h1 class="text-3xl font-extrabold">
+      Test Portal
+     </h1>
+     <p class="opacity-80 mt-1 font-medium">
+      Select your subject
+     </p>
+    </div>
+   </div>
+   <div class="space-y-4" id="display-body">
+   </div>
+   <!-- Neeche wala purana Admin button hata dein -->
+  </div>
+  <div class="hidden flex flex-col h-screen" id="test-ui">
+   <div class="bg-white p-4 shadow-sm border-b flex justify-between items-center">
+    <h2 class="font-extrabold text-sm" id="test-title">
+    </h2>
+    <div class="bg-white border border-green-600 text-green-600 px-3 py-1 rounded-xl font-mono text-sm font-bold" id="total-timer">
+     00:00
+    </div>
+   </div>
+   <div class="flex-grow overflow-y-auto pb-28 px-4 pt-4">
+    <div class="flex gap-3 overflow-x-auto pb-4 scrollbar-hide mb-4" id="nav-palette">
+    </div>
+    <div class="bg-white p-6 rounded-3xl shadow-sm border">
+     <div class="space-y-4" id="question-container">
+     </div>
+    </div>
+   </div>
+   <div class="fixed bottom-0 left-0 right-0 p-3 bg-slate-50 border-t z-40">
+    <div class="flex gap-4 max-w-xl mx-auto">
+     <button onclick="handlePrev()" class="flex-1 bg-slate-100 py-3 rounded-xl font-bold text-sm" id="prev-btn">
+    Previous
+</button>
+
+     <button class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-sm" id="next-btn">
+      Next
+     </button>
+    </div>
+   </div>
+  </div>
+  <div class="hidden max-w-xl mx-auto p-4" id="result-area">
+   <h2 class="text-3xl font-extrabold text-center mb-8">
+    Score Card
+   </h2>
+   <div class="mb-6" id="score-box">
+   </div>
+   <div class="sticky-palette flex gap-2 overflow-x-auto pb-4 mb-4" id="result-palette">
+   </div>
+   <div class="grid grid-cols-3 gap-4 mb-8">
+    <div class="bg-white p-5 rounded-2xl border text-center">
+     <p class="text-[10px] font-black text-slate-400 uppercase">
+      Attempt
+     </p>
+     <p class="text-2xl font-extrabold" id="sum-att">
+      0
+     </p>
+    </div>
+    <div class="bg-green-50 p-5 rounded-2xl border text-center">
+     <p class="text-[10px] font-black text-green-600 uppercase">
+      Right
+     </p>
+     <p class="text-2xl font-extrabold text-green-600" id="sum-right">
+      0
+     </p>
+    </div>
+    <div class="bg-red-50 p-5 rounded-2xl border text-center">
+     <p class="text-[10px] font-black text-red-600 uppercase">
+      Wrong
+     </p>
+     <p class="text-2xl font-extrabold text-red-600" id="sum-wrong">
+      0
+     </p>
+    </div>
+   </div>
+   <div class="space-y-4 mb-4" id="analysis-list">
+   </div>
+   <button class="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold" onclick="location.reload()">
+    Back to Home
+   </button>
+  </div>
+  <div class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[200]" id="submit-modal">
+   <div class="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl">
+    <h2 class="text-xl font-extrabold mb-2">
+     Finish Test?
+    </h2>
+    <p class="text-slate-500 text-sm mb-6">
+     Kya aap test submit karna chahte hain?
+    </p>
+    <div class="flex gap-3">
+     <button class="flex-1 bg-slate-100 py-3 rounded-xl font-bold" onclick="document.getElementById('submit-modal').classList.add('hidden')">
+      Cancel
+     </button>
+     <button class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold" onclick="finishTest()">
+      Submit
+     </button>
+    </div>
+   </div>
+  </div>
+  <div id="back-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[999]">
+    <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl">
+        <h2 class="text-xl font-extrabold mb-2">Test chorna chahte hain?</h2>
+        <p class="text-slate-500 mb-6">Aapki progress delete ho jayegi.</p>
+        <div class="flex gap-4">
+            <button onclick="closeModal()" class="w-full bg-slate-100 py-3 rounded-xl font-bold">No</button>
+            <button onclick="confirmExit()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">Yes</button>
+        </div>
+    </div>
+</div>
+
+ </body>
+</html>
+<script>
+ // 1. DATA: Yahan apna questions add karein
+    const quizData = {
+    "PHYSICS": {
+        "ELECTRICITY": {
+            "Easy": [
+                { "q": "विद्युत धारा का SI मात्रक क्या है?", "options": ["वोल्ट", "ओम", "एम्पियर", "वाट"], "ans": "एम्पियर", "sol": "विद्युत धारा का SI मात्रक एम्पियर (A) होता है" },
+                { "q": "विद्युत धारा मापने के लिए किस यंत्र का उपयोग किया जाता है?", "options": ["वोल्टमीटर", "अमीटर", "बैरोमीटर", "हाइड्रोमीटर"], "ans": "अमीटर", "sol": "अमीटर" },
+                { "q": "ओम का नियम किसने प्रतिपादित किया था?", "options": ["फैराडे", "न्यूटन", "जूल", "ओम"], "ans": "ओम", "sol": "जॉर्ज साइमन ओम" },
+                { "q": "प्रतिरोध का SI मात्रक क्या है?", "options": ["वोल्ट", "ओम", "वाट", "कूलॉम"], "ans": "ओम", "sol": "ओम" },
+                { "q": "वोल्टमीटर को परिपथ में कैसे जोड़ा जाता है?", "options": ["श्रेणीक्रम में", "समानांतर क्रम में", "तिरछे", "किसी में नहीं"], "ans": "समानांतर क्रम में", "sol": "समानांतर क्रम (Parallel)" },
+                { "q": "अमीटर का प्रतिरोध कितना होता है?", "options": ["बहुत अधिक", "मध्यम", "बहुत कम", "अनंत"], "ans": "बहुत कम", "sol": "बहुत कम" },
+                { "q": "वोल्टमीटर का प्रतिरोध कितना होता है?", "options": ["बहुत कम", "शून्य", "बहुत अधिक", "1 ओम"], "ans": "बहुत अधिक", "sol": "बहुत अधिक" },
+                { "q": "विद्युत शक्ति का SI मात्रक क्या है?", "options": ["जूल", "वाट", "कूलॉम", "ओम"], "ans": "वाट", "sol": "वाट" },
+                { "q": "विद्युत ऊर्जा का व्यावसायिक मात्रक क्या है?", "options": ["जूल", "वाट", "किलोवाट-घंटा", "न्यूटन"], "ans": "किलोवाट-घंटा", "sol": "kWh" },
+                { "q": "1 यूनिट विद्युत ऊर्जा बराबर होती है?", "options": ["1 kWh", "1000 J", "100 J", "10 kWh"], "ans": "1 kWh", "sol": "1 kWh" },
+                { "q": "घरेलू वायरिंग में उपकरणों को कैसे जोड़ा जाता है?", "options": ["श्रेणीक्रम में", "समानांतर क्रम में", "मिश्रित क्रम में", "किसी में नहीं"], "ans": "समानांतर क्रम में", "sol": "समानांतर क्रम" },
+                { "q": "फ्यूज किस सिद्धांत पर कार्य करता है?", "options": ["चुंबकीय प्रभाव", "रासायनिक प्रभाव", "ऊष्मीय प्रभाव", "प्रकाश प्रभाव"], "ans": "ऊष्मीय प्रभाव", "sol": "ऊष्मीय प्रभाव (Heating effect)" },
+                { "q": "विद्युत बल्ब का फिलामेंट किसका बना होता है?", "options": ["तांबा", "एलुमिनियम", "टंगस्टन", "लोहा"], "ans": "टंगस्टन", "sol": "टंगस्टन" },
+                { "q": "विद्युत मोटर किस सिद्धांत पर कार्य करती है?", "options": ["विद्युत का चुंबकीय प्रभाव", "ऊष्मीय प्रभाव", "प्रकाश प्रभाव", "रासायनिक प्रभाव"], "ans": "विद्युत का चुंबकीय प्रभाव", "sol": "विद्युत का चुंबकीय प्रभाव" },
+                { "q": "जनरेटर किस सिद्धांत पर कार्य करता है?", "options": ["जूल प्रभाव", "विद्युत चुंबकीय प्रेरण", "ऊष्मीय प्रभाव", "रासायनिक प्रभाव"], "ans": "विद्युत चुंबकीय प्रेरण", "sol": "विद्युत चुंबकीय प्रेरण (Electromagnetic Induction)" },
+                { "q": "धारा का चुंबकीय प्रभाव किसने खोजा?", "options": ["फैराडे", "ओर्स्टेड", "मैक्सवेल", "न्यूटन"], "ans": "ओर्स्टेड", "sol": "हेंस क्रिश्चियन ओर्स्टेड" },
+                { "q": "विद्युत घंटी किस सिद्धांत पर कार्य करती है?", "options": ["विद्युत चुंबकत्व", "स्थायी चुंबक", "गुरुत्वाकर्षण", "प्रकाश प्रभाव"], "ans": "विद्युत चुंबकत्व", "sol": "विद्युत चुंबकत्व" },
+                { "q": "ट्रांसफॉर्मर किस धारा पर कार्य करता है?", "options": ["DC", "AC", "दोनों", "किसी पर नहीं"], "ans": "AC", "sol": "केवल AC" },
+                { "q": "अर्धचालक का उदाहरण कौन है?", "options": ["तांबा", "चाँदी", "जर्मेनियम", "एलुमिनियम"], "ans": "जर्मेनियम", "sol": "जर्मेनियम" },
+                { "q": "कूलॉम किसका मात्रक है?", "options": ["धारा", "शक्ति", "आवेश", "प्रतिरोध"], "ans": "आवेश", "sol": "विद्युत आवेश" },
+                { "q": "20V विभवांतर तथा 5Ω प्रतिरोध पर धारा कितनी होगी?", "options": ["2A", "3A", "4A", "5A"], "ans": "4A", "sol": "I = V/R = 20/5 = 4A" },
+                { "q": "10A धारा 5 सेकंड तक बहती है। आवेश कितना होगा?", "options": ["40C", "50C", "60C", "70C"], "ans": "50C", "sol": "Q = It = 10×5 = 50C" },
+                { "q": "220V पर 5A धारा प्रवाहित हो रही है। शक्ति कितनी होगी?", "options": ["1000W", "1050W", "1100W", "1200W"], "ans": "1100W", "sol": "P = VI = 220×5 = 1100W" },
+                { "q": "100W का बल्ब 10 घंटे चलता है। कितनी ऊर्जा खर्च होगी?", "options": ["0.5 यूनिट", "1 यूनिट", "1.5 यूनिट", "2 यूनिट"], "ans": "1 यूनिट", "sol": "(100*10)/1000 = 1 यूनिट" },
+                { "q": "20Ω प्रतिरोध तथा 2A धारा पर विभवांतर कितना होगा?", "options": ["20V", "30V", "40V", "50V"], "ans": "40V", "sol": "V = IR = 20×2 = 40V" },
+                { "q": "220V पर 1000W हीटर का प्रतिरोध कितना होगा?", "options": ["48.4Ω", "44Ω", "50Ω", "55Ω"], "ans": "48.4Ω", "sol": "R = V²/P = (220*220)/1000 = 48.4Ω" },
+                { "q": "2A धारा 10 मिनट तक बहती है। आवेश कितना होगा?", "options": ["1000C", "1100C", "1200C", "1300C"], "ans": "1200C", "sol": "Q = It = 2 * (10*60) = 1200C" },
+                { "q": "12V बैटरी से 3Ω प्रतिरोध जुड़ा है। धारा कितनी होगी?", "options": ["2A", "3A", "4A", "5A"], "ans": "4A", "sol": "I = V/R = 12/3 = 4A" },
+                { "q": "200W का पंखा 5 घंटे चलता है। ऊर्जा कितनी होगी?", "options": ["0.5 यूनिट", "1 यूनिट", "1.5 यूनिट", "2 यूनिट"], "ans": "1 यूनिट", "sol": "(200*5)/1000 = 1 यूनिट" },
+                { "q": "100Ω प्रतिरोध में 2A धारा बह रही है। शक्ति कितनी होगी?", "options": ["200W", "300W", "400W", "500W"], "ans": "400W", "sol": "P = I²R = 2²×100 = 400W" }
+            ],
+            "Medium": [
+                { "q": "A car accelerates from 0 to 20 m/s in 5s. What is acceleration?", "options": ["2 m/s", "4 m/s", "5 m/s", "10 m/s"], "ans": "4 m/s", "sol": "a = (v-u)/t = (20-0)/5 = 4 m/s." }
+            ],
+            "Hard": [
+                { "q": "Calculate distance if velocity is 10 m/s for 2 minutes.", "options": ["100m", "600m", "1200m", "2000m"], "ans": "1200m", "sol": "Distance = Velocity * Time (120s) = 10 * 120 = 1200m." }
+            ]
+        }
+           } ,
+       
+        "MATHEMATICS": {
+            "NUMBER SYSTEM": {
+                "Easy": [
+                    { "q": "What is the SI unit of speed?", "options": ["m/s", "km/h", "m/s", "m"], "ans": "m/s", "sol": "Speed is measured in meters per second." }
+                ],
+                "Medium": [
+                    { "q": "A car accelerates from 0 to 20 m/s in 5s. What is acceleration?", "options": ["2 m/s", "4 m/s", "5 m/s", "10 m/s"], "ans": "4 m/s", "sol": "a = (v-u)/t = (20-0)/5 = 4 m/s." }
+                ],
+                "Hard": [
+                    { "q": "Calculate distance if velocity is 10 m/s for 2 minutes.", "options": ["100m", "600m", "1200m", "2000m"], "ans": "1200m", "sol": "Distance = Velocity * Time (120s) = 10 * 120 = 1200m." }
+                ]
+            },
+            "PERCENTAGE": {
+                "Easy": [
+                    { "q": "(1360 * 22.5%) + (225 * 136%)", "options": ["600", "612", "620", "630"], "ans": "612", "sol": "306 + 306 = 612" },
+                    { "q": "1400 * x% = 119", "options": ["7.5", "8.0", "8.5", "9.0"], "ans": "8.5", "sol": "x = (119*100)/1400 = 8.5" },
+                    { "q": "(240 * 35%) + (280 * 55%) = (714 * ?)", "options": ["1/3", "1/4", "1/2", "1/5"], "ans": "1/3", "sol": "84 + 154 = 238; 238/714 = 1/3" },
+                    { "q": "(360 * ?%) = 129.6", "options": ["30%", "32%", "34%", "36%"], "ans": "36%", "sol": "(129.6*100)/360 = 36%" },
+                    { "q": "(130 * ?%) = 11.7", "options": ["9%", "10%", "11%", "12%"], "ans": "9%", "sol": "(11.7*100)/130 = 9%" },
+                    { "q": "x * 30% * 15% = 18", "options": ["300", "350", "400", "450"], "ans": "400", "sol": "x * 0.3 * 0.15 = 18 => x = 400" },
+                    { "q": "x * x% = 36", "options": ["50", "60", "70", "80"], "ans": "60", "sol": "x/100 = 36 => x = 3600 => x = 60" },
+                    { "q": "If 15 is 75%, what is the number?", "options": ["15", "20", "25", "30"], "ans": "20", "sol": "(15/75)*100 = 20" },
+                    { "q": "If 20% = 120, what is 120%?", "options": ["600", "650", "700", "720"], "ans": "720", "sol": "120/20 * 120 = 720" },
+                    { "q": "(x-y) * 50% = (x+y) * 30%", "options": ["25%", "30%", "35%", "40%"], "ans": "25%", "sol": "5(x-y)=3(x+y) => 2x=8y => x=4y; y/x = 1/4 = 25%" }
+                ],
+                "Medium": [
+                    { "q": "A car accelerates from 0 to 20 m/s in 5s. What is acceleration?", "options": ["2 m/s", "4 m/s", "5 m/s", "10 m/s"], "ans": "4 m/s", "sol": "a = (v-u)/t = (20-0)/5 = 4 m/s." }
+                ],
+                "Hard": [
+                    { "q": "Calculate distance if velocity is 10 m/s for 2 minutes.", "options": ["100m", "600m", "1200m", "2000m"], "ans": "1200m", "sol": "Distance = Velocity * Time (120s) = 10 * 120 = 1200m." }
+                ]
+            },
+            "PROFIT and LOSE": {
+                "Easy": [
+                    { "q": "What is the SI unit of speed?", "options": ["m/s", "km/h", "m/s", "m"], "ans": "m/s", "sol": "Speed is measured in meters per second." }
+                ],
+                "Medium": [
+                    { "q": "A car accelerates from 0 to 20 m/s in 5s. What is acceleration?", "options": ["2 m/s", "4 m/s", "5 m/s", "10 m/s"], "ans": "4 m/s", "sol": "a = (v-u)/t = (20-0)/5 = 4 m/s." }
+                ],
+                "Hard": [
+                    { "q": "Calculate distance if velocity is 10 m/s for 2 minutes.", "options": ["100m", "600m", "1200m", "2000m"], "ans": "1200m", "sol": "Distance = Velocity * Time (120s) = 10 * 120 = 1200m." }
+                ]
+            }
+        },
+        "REASONING": {
+            "ALFAVET": {
+                "Easy": [
+  { "q": "अंग्रेजी वर्णमाला में बाएँ से 15वाँ अक्षर कौन-सा है?", "options": ["N", "O", "P", "Q"], "ans": "O", "sol": "15th letter = O" },
+  { "q": "अंग्रेजी वर्णमाला में दाएँ से 10वाँ अक्षर कौन-सा है?", "options": ["P", "Q", "R", "S"], "ans": "R", "sol": "27 - 10 = 17th from left = R" },
+  { "q": "अक्षर G के दाएँ से 8वाँ अक्षर कौन-सा होगा?", "options": ["M", "N", "O", "P"], "ans": "O", "sol": "G(7) + 8 = 15th letter = O" },
+  { "q": "अक्षर T के बाएँ से 7वाँ अक्षर कौन-सा होगा?", "options": ["L", "M", "N", "O"], "ans": "M", "sol": "T(20) - 7 = 13th letter = M" },
+  { "q": "F और P के बीच ठीक मध्य में कौन-सा अक्षर है?", "options": ["J", "K", "L", "M"], "ans": "K", "sol": "(6+16)/2 = 11th letter = K" },
+  { "q": "यदि अंग्रेजी वर्णमाला को उल्टा लिखा जाए, तो M के दाएँ से चौथा अक्षर कौन-सा होगा?", "options": ["P", "Q", "R", "S"], "ans": "R", "sol": "Reverse order M is 14th, 14+4=18th = R" },
+  { "q": "यदि अंग्रेजी वर्णमाला को उल्टा लिखा जाए, तो G के बाएँ से पाँचवाँ अक्षर कौन-सा होगा?", "options": ["A", "B", "C", "D"], "ans": "B", "sol": "Reverse order G is 20th, 20-5=15th(from right) = B" },
+  { "q": "यदि सभी स्वर (A, E, I, O, U) हटा दिए जाएँ, तो बाएँ से 8वाँ अक्षर कौन-सा होगा?", "options": ["K", "L", "M", "N"], "ans": "M", "sol": "Consonants: B,C,D,F,G,H,J,K,L,M... 8th is K?" },
+  { "q": "यदि A = 1, B = 2, … Z = 26, तो CAT का मान क्या होगा?", "options": ["22", "23", "24", "25"], "ans": "24", "sol": "3+1+20 = 24" },
+  { "q": "यदि A = 1, B = 2, … Z = 26, तो DOG का मान क्या होगा?", "options": ["24", "25", "26", "27"], "ans": "26", "sol": "4+15+7 = 26" },
+  { "q": "श्रेणी को पूरा करें: A, C, F, J, O, ?", "options": ["T", "U", "V", "W"], "ans": "U", "sol": "+2, +3, +4, +5, +6 = 15+6=21(U)" },
+  { "q": "श्रेणी को पूरा करें: B, E, I, N, ?", "options": ["S", "T", "U", "V"], "ans": "T", "sol": "+3, +4, +5, +6 = 14+6=20(T)" },
+  { "q": "श्रेणी को पूरा करें: AZ, BY, CX, ?", "options": ["DW", "EV", "FU", "GT"], "ans": "DW", "sol": "First: A,B,C,D; Second: Z,Y,X,W" },
+  { "q": "श्रेणी को पूरा करें: Z, W, S, N, ?", "options": ["I", "H", "G", "F"], "ans": "H", "sol": "-3, -4, -5, -6 = 14-6=8(H)" },
+  { "q": "Dictionary Order में सबसे पहले कौन आएगा?", "options": ["Bread", "Brave", "Brick", "Branch"], "ans": "Brave", "sol": "Brave comes first" },
+  { "q": "Dictionary Order में सबसे अंत में कौन आएगा?", "options": ["Plane", "Planet", "Planning", "Plant"], "ans": "Plant", "sol": "Plant comes last" },
+  { "q": "EDUCATION शब्द से कौन-सा शब्द बन सकता है?", "options": ["Action", "Dance", "Nation", "Doctor"], "ans": "Nation", "sol": "Letters of Nation are in EDUCATION" },
+  { "q": "CLASSROOM से कौन-सा शब्द नहीं बन सकता?", "options": ["Room", "Class", "Mass", "Cross"], "ans": "Cross", "sol": "Only one 'S' in CLASSROOM" },
+  { "q": "11वें अक्षर के दाएँ से तीसरा अक्षर क्या होगा?", "options": ["M", "N", "O", "P"], "ans": "N", "sol": "11 + 3 = 14th = N" },
+  { "q": "20वें अक्षर के बाएँ से पाँचवाँ अक्षर क्या होगा?", "options": ["M", "N", "O", "P"], "ans": "O", "sol": "20 - 5 = 15th = O" },
+  { "q": "यदि A ↔ Z, B ↔ Y …, तो H का विपरीत क्या होगा?", "options": ["R", "S", "T", "U"], "ans": "S", "sol": "H(8) -> 27-8 = 19(S)" },
+  { "q": "C और M के बीच ठीक मध्य में कौन-सा अक्षर है?", "options": ["G", "H", "I", "J"], "ans": "H", "sol": "(3+13)/2 = 8th = H" },
+  { "q": "प्रत्येक दूसरा अक्षर हटाने पर बाएँ से 7वाँ क्या होगा?", "options": ["K", "L", "M", "N"], "ans": "M", "sol": "Only odd positions remain: 1,3,5,7,9,11,13 = M" },
+  { "q": "विषम (Odd One Out) चुनिए: ACE, BDF, CEH, DFH", "options": ["ACE", "BDF", "CEH", "DFH"], "ans": "CEH", "sol": "Pattern difference is +2,+2 in others, but CEH is +2,+3" },
+  { "q": "श्रेणी को पूरा करें: B, D, G, K, ?", "options": ["O", "P", "Q", "R"], "ans": "P", "sol": "+2, +3, +4, +5 = 11+5=16(P)" }
+],
+
+                "Medium": [
+                    
+  {
+    "q": "यदि शब्द UTOPIAN के सभी अक्षरों को वर्णमाला के क्रम में बाएं से दाएं व्यवस्थित किया जाए और प्रत्येक स्वर को अंग्रेजी वर्णमाला में अगले व्यंजन से तथा प्रत्येक व्यंजन को अंग्रेजी वर्णमाला में पहले अक्षर से बदल दिया जाए, तो दाएं से तीसरा अक्षर क्या होगा?",
+    "options": ["U", "T", "P", "N"],
+    "ans": "P"
+  },
+  {
+    "q": "यदि BROWNIE शब्द के अक्षरों को अंग्रेजी वर्णमाला के क्रम में बाएं से दाएं पुनर्व्यवस्थित किया जाए, तो पुनर्व्यवस्था के बाद कितने अक्षरों का स्थान अपरिवर्तित रहेगा?",
+    "options": ["कोई नहीं", "एक", "दो", "तीन", "चार"],
+    "ans": "एक"
+  },
+  {
+    "q": "यदि शब्द FAINTED के सभी अक्षरों को वर्णमाला के क्रम में व्यवस्थित किया जाए और फिर प्रत्येक स्वर को अगले स्वर तथा प्रत्येक व्यंजन को अगले अक्षर से बदल दिया जाए, तो नई व्यवस्था में ठीक मध्य का अक्षर क्या होगा?",
+    "options": ["F", "E", "J", "I", "O"],
+    "ans": "J"
+  },
+  {
+    "q": "शब्द COMMUNICATIONS में पहले और दूसरे, तीसरे और चौथे, पाँचवें और छठे... आदि अक्षरों को परस्पर बदल दिया जाए, तो दाएं से छठा अक्षर कौन-सा होगा?",
+    "options": ["T", "N", "U", "A"],
+    "ans": "N"
+  },
+  {
+    "q": "ADVERTISE शब्द में ऐसे कितने अक्षर-युग्म हैं, जिनके बीच शब्द में उतने ही अक्षर हैं जितने अंग्रेजी वर्णमाला में उनके बीच होते हैं?",
+    "options": ["एक भी नहीं", "एक", "दो", "तीन", "तीन से अधिक"],
+    "ans": "तीन"
+  },
+  {
+    "q": "CHRONICLE शब्द में ऐसे कितने अक्षर-युग्म हैं, जिनके बीच शब्द में उतने ही अक्षर हैं जितने अंग्रेजी वर्णमाला में उनके बीच होते हैं?",
+    "options": ["एक भी नहीं", "एक", "दो", "तीन", "तीन से अधिक"],
+    "ans": "तीन से अधिक"
+  },
+  {
+    "q": "शब्द CLUSTERS में ऐसे कितने अक्षर-युग्म (आगे तथा पीछे दोनों दिशाओं में) हैं, जिनके बीच शब्द में उतने ही अक्षर हैं जितने अंग्रेजी वर्णमाला में हैं?",
+    "options": ["1", "0", "2", "3", "तीन से अधिक"],
+    "ans": "3"
+  },
+  {
+    "q": "शब्द MATHEMATICS में ऐसे कितने अक्षर-युग्म हैं, जिनके बीच शब्द में उतने ही अक्षर हैं जितने अंग्रेजी वर्णमाला में उनके बीच होते हैं?",
+    "options": ["कोई नहीं", "एक", "दो", "तीन", "तीन से अधिक"],
+    "ans": "तीन से अधिक"
+  },
+  {
+    "q": "शब्द BANGLE में ऐसे कितने अक्षर-युग्म (आगे तथा पीछे दोनों दिशाओं में) हैं, जिनके बीच शब्द में उतने ही अक्षर हैं जितने अंग्रेजी वर्णमाला में होते हैं?",
+    "options": ["तीन से अधिक", "दो", "एक", "तीन", "कोई नहीं"],
+    "ans": "तीन"
+  },
+
+  {
+    "q": "निम्नलिखित शब्दों में से किस शब्द के अक्षर अंग्रेजी वर्णमाला के क्रम में हैं?",
+    "options": ["Shade", "Heart", "Billow", "Charge"],
+    "ans": "Charge"
+  },
+  {
+    "q": "निम्न अनुक्रम में बाएं से 18वें अक्षर के दाईं ओर छठा अक्षर है:\nABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "options": ["Z", "X", "W", "Y"],
+    "ans": "Y"
+  },
+  {
+    "q": "अंग्रेजी वर्णमाला में बाएं से 10वें अक्षर के दाएं 9वां अक्षर क्या होगा?",
+    "options": ["G", "S", "J", "W"],
+    "ans": "J"
+  },
+  {
+    "q": "अंग्रेजी वर्णमाला में दाएं से 5वें अक्षर के बाएं 11वां अक्षर क्या होगा?",
+    "options": ["P", "L", "M", "K"],
+    "ans": "M"
+  },
+  {
+    "q": "अंग्रेजी वर्णमाला में दाएं से 7वें अक्षर के बाएं 11वां अक्षर क्या होगा?",
+    "options": ["H", "W", "S", "I"],
+    "ans": "I"
+  },
+  {
+    "q": "अंग्रेजी वर्णमाला में बाएं से 19वें अक्षर के बाएं 11वां अक्षर क्या होगा?",
+    "options": ["G", "H", "I", "R"],
+    "ans": "H"
+  },
+  {
+    "q": "यदि बाएं से दाएं बढ़ते हुए अंग्रेजी वर्णमाला के हर चौथे अक्षर को मिटा दिया जाए, तो प्राप्त नई श्रृंखला में दाएं ओर से 5वां अक्षर कौन-सा होगा?",
+    "options": ["U", "F", "V", "E"],
+    "ans": "U"
+  },
+  {
+    "q": "यदि अंग्रेजी वर्णमाला विपरीत क्रम में लिख दी जाए, तो बाएं से 22वें अक्षर के बाएं 12वां अक्षर क्या होगा?",
+    "options": ["Q", "O", "J", "R"],
+    "ans": "R"
+  },
+  {
+    "q": "यदि अंग्रेजी वर्णमाला विपरीत क्रम में लिख दी जाए, तो बाएं से 24वें अक्षर के बाएं 9वां अक्षर क्या होगा?",
+    "options": ["X", "C", "L", "M"],
+    "ans": "X" },
+{ "q": "यदि अंग्रेजी वर्णमाला विपरीत क्रम में लिख दी जाए, तो दाएं से 24वें अक्षर के दाएं 9वां अक्षर क्या होगा?",
+    "options": ["X", "O", "L", "P"],
+    "ans": "L" },
+  { "q": "यदि अंग्रेजी वर्णमाला के प्रथम अर्धांश को विपरीत क्रम में तथा द्वितीय अर्धांश को वास्तविक क्रम में लिखा जाए, तो बाएं से 7वें अक्षर के दाएं 5वां अक्षर क्या होगा?",
+    "options": ["L", "C", "B", "Q"],
+    "ans": "Q" },
+  { "q": "प्रथम अर्धांश का वह अक्षर जिसका स्थान परिवर्तित नहीं होगा, कौन-सा है?",
+    "options": ["M", "E", "L", "G"],
+    "ans": "M" },
+  { "q": "बाएं से उन्नीसवें अक्षर के दाएं सातवां अक्षर क्या होगा?",
+    "options": ["Z", "D", "W", "T"],
+    "ans": "Z" },
+  { "q": "यदि प्रथम अर्धांश वास्तविक क्रम में तथा द्वितीय अर्धांश विपरीत क्रम में लिखा जाए, तो बाएं से 7वें अक्षर के दाएं 7वां अक्षर क्या होगा?",
+    "options": ["N", "O", "Z", "T"],
+    "ans": "N" },
+  { "q": "दाएं से 14वें अक्षर के दाएं 5वां अक्षर क्या होगा?",
+    "options": ["V", "R", "X", "W"],
+    "ans": "W" },
+  { "q": "द्वितीय अर्धांश का वह अक्षर जिसका स्थान परिवर्तित नहीं होगा, कौन-सा है?",
+    "options": ["T", "N", "D", "U"],
+    "ans": "T" },
+     { "q": "यदि अंग्रेजी वर्णमाला में सम संख्या पर आने वाले सभी अक्षरों को (4 के गुणक को छोड़कर) हटा दिया जाए, तो नई वर्णमाला श्रृंखला में 13वें स्थान पर कौन-सा अक्षर आएगा?",
+    "options": ["T"],
+    "ans": "T" },
+  { "q": "यदि शब्द MELODRAMATIC में पहले और छठे, दूसरे और आठवें... आदि अक्षरों का स्थान बदल दिया जाए, तो दाएं सिरे से तीसरा अक्षर कौन-सा होगा?",
+    "options": ["O", "P", "Q", "R"],
+    "ans": "O" },
+  {"q": "शब्द CREATION के व्यंजनों को पहले तथा स्वरों को बाद में वर्णक्रम में व्यवस्थित किया जाए। दाएं से छठे अक्षर के दाएं तीसरा अक्षर कौन-सा होगा?",
+    "options": ["T", "I", "N", "A"],
+    "ans": "I" },
+  {"q": "शब्द CULTIVATOR के पहले और छठे, दूसरे और सातवें... आदि अक्षरों के स्थान बदलने पर बाएं से दूसरा अक्षर कौन-सा होगा?",
+    "options": ["E", "O", "L", "V"],
+    "ans": "V"
+  }
+],
+
+
+                "Hard": [
+                    { "q": "Calculate distance if velocity is 10 m/s for 2 minutes.", "options": ["100m", "600m", "1200m", "2000m"], "ans": "1200m", "sol": "Distance = Velocity * Time (120s) = 10 * 120 = 1200m." }
+                ]
+            }
+            }
+};
+
+    let isSubmitted = false;
+    let sessionData = [], currentSub, currentQ = 0, totalInterval, timeLeft = 0, currentChapter = "";
+
+    // MERE ADD KIYE GAYE MISSING FUNCTIONS (Jo aapke code mein nahi the)
+    function changeQ(i) {
+    currentQ = i;
+    render(); // UI update karein
+    
+    // Auto-scroll logic
+    const activeBtn = document.getElementById('qnav-' + i);
+    if (activeBtn) {
+        activeBtn.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
+        });
+    }
+}
+
+
+
+
+     function setAns(o) {
+    // Agar wahi option pehle se selected hai, to null kar dein (deselect)
+    if (sessionData[currentQ].sel === o) {
+        sessionData[currentQ].sel = null;
+    } else {
+        // Varna naya option select karein
+        sessionData[currentQ].sel = o;
+    }
+    render(); // UI update karne ke liye
+}
+
+
+    function toggleSol(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('hidden');
+    }
+
+    // --- APP START ---
+    window.onload = () => { renderSubjects(); };
+
+    function renderSubjects() {
+        const body = document.getElementById('display-body');
+        body.innerHTML = "";
+        Object.keys(quizData).forEach(sub => {
+            body.innerHTML += `<button onclick="showChapters('${sub}')" class="w-full bg-white p-5 rounded-2xl border-2 mb-3 font-bold text-left">${sub}</button>`;
+        });
+    }
+
+    // Global variable track karne ke liye
+let currentPageState = 'dashboard'; // 'dashboard', 'chapters', 'levels', 'test'
+
+function showChapters(sub) {
+    currentSub = sub;
+    currentPageState = 'chapters';
+    window.history.pushState({page: 'chapters'}, null, ""); 
+
+    const body = document.getElementById('display-body');
+    body.innerHTML = `<button onclick="goBack()" class="text-blue-600 font-bold mb-4">← Back</button>`;
+    
+    Object.keys(quizData[sub]).forEach(c => {
+        body.innerHTML += `<button onclick="showLevels('${c}')" class="block w-full bg-white p-5 rounded-2xl border mb-3 font-medium text-left">${c}</button>`;
+    });
+}
+
+function showLevels(chapter) {
+    currentPageState = 'levels';
+
+    const body = document.getElementById('display-body');
+    body.innerHTML = `
+        <button onclick="goBack()" class="text-blue-600 font-bold mb-4">← Back</button>
+
+        <button onclick="startTest('${chapter}','Easy')" 
+            class="w-full bg-green-100 p-5 rounded-2xl font-bold mb-2">
+            Beginner
+        </button>
+
+        <button onclick="startTest('${chapter}','Medium')" 
+            class="w-full bg-yellow-100 p-5 rounded-2xl font-bold mb-2">
+            Intermediate
+        </button>
+
+        <button onclick="startTest('${chapter}','Hard')" 
+            class="w-full bg-red-100 p-5 rounded-2xl font-bold">
+            Advanced
+        </button>
+    `;
+}
+
+// Universal Back Button Handler
+function goBack() {
+    window.history.back();
+}
+
+
+
+    function startTest(chap, level) {
+    // UI Switches
+    document.getElementById('app').classList.add('hidden');
+    document.getElementById('test-ui').classList.remove('hidden');
+    
+    window.history.pushState(null, null, window.location.href); 
+    
+    currentQ = 0;
+    currentChapter = chap;
+
+    if (!quizData[currentSub] || !quizData[currentSub][chap] || !quizData[currentSub][chap][level]) {
+        alert("Data not found!");
+        return;
+    }
+
+    sessionData = quizData[currentSub][chap][level].map(item => ({
+        ...item,
+        sel: null,
+        timeSpent: 0
+    }));
+
+    const timePerQ = (level === "Easy" ? 30 : level === "Medium" ? 40 : 90);
+    timeLeft = sessionData.length * timePerQ;
+    isSubmitted = false;
+
+    if (totalInterval) clearInterval(totalInterval);
+
+    // यह रहा वह बदलाव: सीधे लेवल के नाम को चेक करके बदलें
+    let displayLevel = level;
+    if (level === "Easy") displayLevel = "आसान";
+    else if (level === "Medium") displayLevel = "मध्यम";
+    else if (level === "Hard") displayLevel = "कठिन";
+
+    document.getElementById('test-title').innerText = `${chap} (${displayLevel})`;
+
+    render();
+
+    totalInterval = setInterval(() => {
+        if (isSubmitted) return clearInterval(totalInterval);
+        if (timeLeft > 0) {
+            timeLeft--;
+            sessionData[currentQ].timeSpent++;
+            const totalTimerEl = document.getElementById('total-timer');
+            if (totalTimerEl) {
+                totalTimerEl.innerText = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
+            }
+        } else {
+            finishTest(true);
+        }
+    }, 1000);
+    
+}
+
+
+    function render() {
+    if (!sessionData || !sessionData[currentQ]) return;
+    
+    const q = sessionData[currentQ];
+    const container = document.getElementById('question-container');
+    
+    const mins = Math.floor(q.timeSpent / 60);
+    const secs = (q.timeSpent % 60).toString().padStart(2, '0');
+    
+    // Yahan options ko map karte waqt apna naya logic use karein
+    container.innerHTML = `
+        <div class="flex justify-between items-center mb-4">
+            <p class="text-sm font-bold text-blue-600">Question ${currentQ + 1}</p>
+            <div id="question-timer" class="text-sm font-bold font-mono ${q.timeSpent > 30 ? 'text-red-600' : 'text-green-600'}">
+                Time: ${mins}:${secs}
+            </div>
+        </div>
+        <p class="font-bold text-lg mb-4 text-slate-800">${q.q}</p>
+        
+        ${q.options.map(o => `
+            <button onclick="setAns('${o}')" class="block w-full p-4 border-2 rounded-2xl mb-2 transition-all 
+                ${q.sel === o ? 'bg-blue-600 text-white border-blue-600' : (isReAttempting ? 'border-yellow-400' : 'border-slate-100')}">
+                ${o}
+            </button>
+        `).join('')}
+    `;
+    
+    // Baaki ka palette render logic waisa hi rahega
+    const palette = document.getElementById('nav-palette');
+    palette.innerHTML = sessionData.map((item, i) => {
+        let btnColor = item.sel ? 'bg-green-500 text-white' : 'bg-white';
+        if (i === currentQ) btnColor = 'bg-slate-800 text-white';
+        return `<button id="qnav-${i}" onclick="changeQ(${i})" class="pal-btn ${btnColor}">${i + 1}</button>`;
+    }).join('');
+    
+    // ... (next button ka logic yahan rahega)
+
+
+
+    // --- BUTTON LOGIC UPDATE ---
+    const nextBtn = document.getElementById('next-btn');
+    const isLastQ = (currentQ === sessionData.length - 1);
+
+    // Agar Re-Attempt mode hai, toh hamesha "Submit" dikhayein
+    if (isReAttempting) {
+        nextBtn.innerText = "Submit";
+        nextBtn.className = "flex-1 bg-green-600 text-white py-3 rounded-xl font-bold text-sm";
+        nextBtn.onclick = () => {
+            isReAttempting = false; // Flag off
+            document.getElementById('submit-modal').classList.remove('hidden');
+        };
+    } else {
+        nextBtn.innerText = isLastQ ? "Submit" : "Next";
+        nextBtn.className = isLastQ 
+            ? "flex-1 bg-green-600 text-white py-3 rounded-xl font-bold text-sm" 
+            : "flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-sm";
+        nextBtn.onclick = () => {
+            if (!isLastQ) changeQ(currentQ + 1);
+            else document.getElementById('submit-modal').classList.remove('hidden');
+        };
+    }
+}
+
+
+// हर सेकंड प्रश्न का समय अपडेट करने वाला नया लॉजिक[span_2](start_span)[span_2](end_span)
+// यह इंटरवल सिर्फ UI को हर सेकंड अपडेट करेगा, टाइमर को 2 गुना स्पीड से चलने से रोकेगा[span_3](start_span)[span_3](end_span)
+setInterval(() => {
+    if (!document.getElementById('test-ui').classList.contains('hidden') && !isSubmitted) {
+        const qTimerEl = document.getElementById('question-timer');
+        if (qTimerEl && sessionData[currentQ]) {
+            // ध्यान दें: यहाँ sessionData[currentQ].timeSpent++ नहीं है, 
+            // क्योंकि यह पहले से ही आपके 'startTest' वाले interval में हो रहा है[span_4](start_span)[span_4](end_span)
+            const mins = Math.floor(sessionData[currentQ].timeSpent / 60);
+            const secs = (sessionData[currentQ].timeSpent % 60).toString().padStart(2, '0');
+            qTimerEl.innerText = `Time: ${mins}:${secs}`;
+            
+            // 30 सेकंड बाद रंग बदलना[span_5](start_span)[span_5](end_span)
+            if (sessionData[currentQ].timeSpent > 30) {
+                qTimerEl.classList.remove('text-green-600');
+                qTimerEl.classList.add('text-red-600');
+            }
+        }
+    }
+}, 1000); // 1 सेकंड का अंतराल[span_6](start_span)[span_6](end_span)
+
+
+    function finishTest(isTimeOver = false) {
+    if (isSubmitted) return;
+    isSubmitted = true;
+    
+    clearInterval(totalInterval);
+    document.getElementById('submit-modal').classList.add('hidden');
+    document.getElementById('test-ui').classList.add('hidden');
+    document.getElementById('result-area').classList.remove('hidden');
+
+    // --- HISTORY STATE UPDATE ---
+    currentPageState = 'result';
+    window.history.pushState({page: 'result'}, null, window.location.href);
+    
+    let att = 0, rig = 0, wro = 0, html = "";
+    
+    sessionData.forEach((q, i) => {
+        let isCorrect = (q.sel === q.ans);
+        let statusClass = !q.sel ? 'border-slate-200' : (isCorrect ? 'border-green-500' : 'border-red-500');
+        
+        if(q.sel) { 
+            att++; 
+            isCorrect ? rig++ : wro++; 
+        }
+        
+        let timeFormatted = `${Math.floor(q.timeSpent/60)}:${(q.timeSpent%60).toString().padStart(2,'0')}`;
+        let timeColor = q.timeSpent > 30 ? 'text-red-600' : 'text-green-600'; 
+        
+        // ... purane code ke andar jahan button render ho raha hai, wahan ye karein:
+
+html += `
+<div class="bg-white border-l-4 ${statusClass} p-5 rounded-2xl shadow-sm mb-6">
+    <div class="flex justify-between items-start mb-3">
+        <span class="text-[10px] font-black text-slate-400 uppercase">Question ${i+1}</span>
+        <span class="text-[10px] font-bold ${timeColor}">Time: ${timeFormatted}</span>
+    </div>
+    <p class="font-bold text-slate-800 mb-4">${q.q}</p>
+    
+    <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+        <div class="bg-slate-50 p-2.5 rounded-lg border">Your: <b class="${!q.sel ? 'text-slate-400' : ''}">${q.sel || 'None'}</b></div>
+        <div class="bg-green-50 p-2.5 rounded-lg border border-green-100 text-green-700">Ans: <b>${q.ans}</b></div>
+    </div>
+    
+    <div class="flex gap-2">
+        <button onclick="toggleSol('sol-${i}')" class="flex-1 text-xs bg-slate-900 text-white py-2.5 rounded-xl font-bold hover:bg-slate-800 transition">View Sol</button>
+        <button onclick="reAttemptQuestion(${i})" class="flex-1 text-xs bg-blue-100 text-blue-700 py-2.5 rounded-xl font-bold hover:bg-blue-200 transition">Re-Attempt</button>
+    </div>
+    
+    <div id="sol-${i}" class="hidden mt-3 p-4 bg-slate-50 border rounded-xl italic text-sm text-slate-600">${q.sol || 'No solution available'}</div>
+</div>`;
+
+    });
+    
+    const score = (rig - wro * 0.25).toFixed(2);
+    const accuracy = att ? ((rig / att) * 100).toFixed(1) : 0;
+    const percentage = ((rig / sessionData.length) * 100).toFixed(1);
+    
+    let badge = 'Needs Improvement';
+    if(percentage >= 90) badge = 'Excellent';
+    else if(percentage >= 75) badge = 'Very Good';
+    
+    document.getElementById('score-box').innerHTML = `
+    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 rounded-3xl shadow-xl mb-6">
+        <div class="flex justify-between items-center mb-6">
+            <div><p class="text-xs opacity-80 uppercase tracking-widest">Final Score</p><p class="text-5xl font-extrabold">${score}</p></div>
+            <div class="text-right bg-white/20 px-4 py-2 rounded-xl"><p class="text-xs font-bold">${badge}</p><p class="text-xl font-bold">${percentage}%</p></div>
+        </div>
+    </div>`;
+        
+    document.getElementById('sum-att').innerText = att;
+    document.getElementById('sum-right').innerText = rig;
+    document.getElementById('sum-wrong').innerText = wro;
+    document.getElementById('analysis-list').innerHTML = html;
+    
+    document.getElementById('result-palette').innerHTML = sessionData.map((q, i) => {
+        const c = !q.sel ? 'bg-slate-200' : (q.sel === q.ans ? 'bg-green-500' : 'bg-red-500');
+        return `<button id="qnav-${i}" onclick="showSolution(${i})" class="pal-btn ${c} text-white shadow-sm font-bold w-10 h-10 rounded-lg">${i + 1}</button>`;
+    }).join('');
+}
+
+
+
+document.addEventListener('click',function(e){
+if(e.target.id==='sol-prev' && window.currentSolutionIndex>0){
+currentSolutionIndex--; document.getElementById('qnav-'+currentSolutionIndex)?.scrollIntoView({behavior:'smooth'});
+}
+if(e.target.id==='sol-next' && window.currentSolutionIndex<sessionData.length-1){
+currentSolutionIndex++; document.getElementById('qnav-'+currentSolutionIndex)?.scrollIntoView({behavior:'smooth'});
+}
+});
+function showSolution(index) {
+    window.currentSolutionIndex = index;
+    
+    // Sabse pehle saare solution box ko show/hide control karein
+    const solEl = document.getElementById('sol-' + index);
+    if(solEl) {
+        solEl.classList.remove('hidden'); // Solution dikhayein
+        
+        // Scroll to element
+        solEl.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center'    // Screen ke beech mein lane ke liye
+        });
+    }
+}
+
+
+
+// Initial state set karne ke liye
+history.pushState(null, null, window.location.href);
+// Modal functions
+function closeModal() {
+    document.getElementById('back-modal').classList.add('hidden');
+    // Important: Cancel karne par wapas history push karein taaki back button phir se active ho
+    window.history.pushState(null, null, window.location.href);
+}
+
+function confirmExit() {
+    document.getElementById('back-modal').classList.add('hidden');
+    document.getElementById('test-ui').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    renderSubjects();
+    clearInterval(totalInterval);
+}
+
+// Back Button Logic
+// Sirf ye ek block rahega, jo sab handle karega
+// Browser ka back button handle karne ka sahi tarika
+window.onpopstate = (event) => {
+    // 1. Agar Test UI chal raha hai (Test Screen)
+    if (!document.getElementById('test-ui').classList.contains('hidden')) {
+        document.getElementById('back-modal').classList.remove('hidden');
+        // Modal dikha diya, ab history mein wapas ek entry add kar rahe hain taaki 
+        // agar user modal cancel kare to phir se back button kaam kare.
+        window.history.pushState(null, null, window.location.href);
+    } 
+    // 2. Agar Result page khula hai
+    else if (!document.getElementById('result-area').classList.contains('hidden')) {
+        location.reload(); 
+    }
+    // 3. Level selection page par hain -> Chapter page par jayein
+    else if (currentPageState === 'levels') {
+        currentPageState = 'chapters';
+        // Yahan 'showChapters' dubara call karein ya logic check karein
+        goBackToChapters(); 
+    }
+    // 4. Chapter selection page par hain -> Home (Dashboard) par jayein
+    else if (currentPageState === 'chapters') {
+        location.reload();
+    }
+};
+
+// Ek extra helper function banayein taaki level se chapter par wapas ja sakein
+function goBackToChapters() {
+    currentPageState = 'chapters';
+    document.getElementById('app').classList.remove('hidden');
+    // Isse wapas list dikh jayegi
+    showChapters(currentSub); 
+}
+
+// Initial state load
+window.history.pushState(null, null, window.location.href);
+function handlePrev() {
+    if (currentQ > 0) {
+        changeQ(currentQ - 1);
+    }
+}
+let isReAttempting = false; // Global variable
+
+function reAttemptQuestion(index) {
+    document.getElementById('result-area').classList.add('hidden');
+    document.getElementById('test-ui').classList.remove('hidden');
+    
+    currentQ = index;
+    isSubmitted = false;
+    isReAttempting = true; // Re-attempt flag on
+    
+    // Timer reset
+    sessionData[currentQ].timeSpent = 0; 
+    
+    // Interval reset
+    if (totalInterval) clearInterval(totalInterval);
+    totalInterval = setInterval(() => {
+        if (isSubmitted) return clearInterval(totalInterval);
+        if (timeLeft > 0) timeLeft--;
+        sessionData[currentQ].timeSpent++;
+    }, 1000);
+
+    // Pehle render karein
+    render();
+
+    // Ab navigation palette ko scroll karein (thoda delay ke saath)
+    setTimeout(() => {
+        const activeBtn = document.getElementById('qnav-' + index);
+        if (activeBtn) {
+            activeBtn.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'center'
+            });
+        }
+    }, 100);
+}
+
+</script>
